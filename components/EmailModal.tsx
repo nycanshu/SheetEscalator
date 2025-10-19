@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, X, Clock, AlertTriangle, FileText, User, Calendar } from 'lucide-react';
+import { Mail, Send, X, Clock, AlertTriangle, FileText, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -144,8 +144,8 @@ System`);
                 <Mail className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-bold">Send Escalation Email</DialogTitle>
-                <DialogDescription className="text-base mt-1">
+                <DialogTitle className="text-xl font-bold">Send Escalation Email</DialogTitle>
+                <DialogDescription className="text-sm mt-1">
                   Send an escalation email for the selected record
                 </DialogDescription>
               </div>
@@ -173,7 +173,7 @@ System`);
                         <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                         <span className="text-sm font-medium text-orange-800 dark:text-orange-200">Pending Since</span>
                       </div>
-                      <div className="text-xl font-semibold text-orange-600 dark:text-orange-400">
+                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
                         {record.pendingSince} days
                       </div>
                     </div>
@@ -183,7 +183,7 @@ System`);
                         <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         <span className="text-sm font-medium text-blue-800 dark:text-blue-200">TAT Days</span>
                       </div>
-                      <div className="text-xl font-semibold text-blue-600 dark:text-blue-400">
+                      <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                         {record.tatDays} days
                       </div>
                     </div>
@@ -193,7 +193,7 @@ System`);
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                         <span className="text-sm font-medium text-red-800 dark:text-red-200">Overdue</span>
                       </div>
-                      <div className="text-xl font-semibold text-red-600 dark:text-red-400">
+                      <div className="text-lg font-semibold text-red-600 dark:text-red-400">
                         {overdueDays} days
                       </div>
                     </div>
@@ -261,38 +261,38 @@ System`);
             >
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="to" className="text-base font-semibold">To</Label>
+                  <Label htmlFor="to" className="text-sm font-semibold">To</Label>
                   <Input
                     id="to"
                     type="email"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
                     placeholder="recipient@example.com"
-                    className="mt-2 h-12 text-base"
+                    className="mt-2 h-10"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="subject" className="text-base font-semibold">Subject</Label>
+                  <Label htmlFor="subject" className="text-sm font-semibold">Subject</Label>
                   <Input
                     id="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Email subject"
-                    className="mt-2 h-12 text-base"
+                    className="mt-2 h-10"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="body" className="text-base font-semibold">Message Body</Label>
+                  <Label htmlFor="body" className="text-sm font-semibold">Message Body</Label>
                   <Textarea
                     id="body"
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     placeholder="Type your message here..."
-                    className="mt-2 min-h-[350px] text-base leading-relaxed resize-y"
+                    className="mt-2 min-h-[300px] text-sm leading-relaxed resize-y"
                   />
-                  <div className="mt-2 text-sm text-muted-foreground">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     The message will automatically include record details and overdue information.
                   </div>
                 </div>

@@ -8,7 +8,6 @@ import { Card } from '@/components/ui/card';
 import { 
   Home, 
   BarChart3, 
-  Settings, 
   Sun, 
   Moon, 
   Menu,

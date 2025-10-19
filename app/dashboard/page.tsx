@@ -9,7 +9,7 @@ import { Record } from '@/lib/dexieClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail, Users } from 'lucide-react';
+import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { clearAllData } from '@/lib/dexieClient';

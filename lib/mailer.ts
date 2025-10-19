@@ -28,7 +28,7 @@ class MailerSingleton {
     }
 
     try {
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: smtpHost,
         port: parseInt(smtpPort),
         secure: false, // true for 465, false for other ports

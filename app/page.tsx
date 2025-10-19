@@ -54,14 +54,14 @@ export default function Home() {
           </motion.div>
 
           <motion.h1 
-            className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent"
+            className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent"
             variants={fadeInUp}
           >
             SheetEscalator
           </motion.h1>
 
           <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed"
+            className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed"
             variants={fadeInUp}
           >
             Transform your Excel workflows with intelligent parsing, automated escalation, and seamless data management.
@@ -71,13 +71,13 @@ export default function Home() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center max-w-md mx-auto"
             variants={fadeInUp}
           >
-            <Button asChild size="lg" className="text-lg px-8 py-6 group w-full sm:w-auto">
+            <Button asChild size="lg" className="px-8 py-6 group w-full sm:w-auto">
               <Link href="#upload">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 w-full sm:w-auto">
+            <Button asChild variant="outline" size="lg" className="px-8 py-6 w-full sm:w-auto">
               <Link href="/dashboard">
                 <BarChart3 className="mr-2 h-5 w-5" />
                 View Dashboard
@@ -105,8 +105,8 @@ export default function Home() {
           variants={staggerContainer}
         >
           <motion.div className="text-center mb-16" variants={fadeInUp}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Powerful Features</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Powerful Features</h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Everything you need to streamline your data processing workflow
             </p>
           </motion.div>
@@ -121,8 +121,8 @@ export default function Home() {
                   >
                     <FileText className="h-8 w-8 text-primary" />
                   </motion.div>
-                  <CardTitle className="text-2xl mb-3">Smart Parsing</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
+                  <CardTitle className="text-xl mb-3">Smart Parsing</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
                     Automatically parse Excel files with intelligent column detection and identify pending records based on your business rules.
                   </CardDescription>
                 </CardHeader>
@@ -154,8 +154,8 @@ export default function Home() {
                   >
                     <BarChart3 className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </motion.div>
-                  <CardTitle className="text-2xl mb-3">Dashboard View</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
+                  <CardTitle className="text-xl mb-3">Dashboard View</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
                     View, filter, and sort pending records with an intuitive dashboard interface and real-time updates.
                   </CardDescription>
                 </CardHeader>
@@ -187,8 +187,8 @@ export default function Home() {
                   >
                     <Mail className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                   </motion.div>
-                  <CardTitle className="text-2xl mb-3">Email Escalation</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
+                  <CardTitle className="text-xl mb-3">Email Escalation</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
                     Send escalation emails directly from the dashboard with customizable templates and tracking capabilities.
                   </CardDescription>
                 </CardHeader>
@@ -222,8 +222,8 @@ export default function Home() {
           variants={staggerContainer}
         >
           <motion.div className="text-center mb-16" variants={fadeInUp}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose SheetEscalator?</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Why Choose SheetEscalator?</h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Built for efficiency, designed for simplicity
             </p>
           </motion.div>
@@ -265,18 +265,18 @@ export default function Home() {
           transition={{ duration: 0.8 }}
         >
           <div className="max-w-2xl mx-auto p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20">
-            <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-lg text-muted-foreground mb-8">
+            <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
+            <p className="text-base text-muted-foreground mb-8">
               Upload your first Excel file and experience the power of automated data processing.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center max-w-md mx-auto">
-              <Button asChild size="lg" className="text-lg px-8 py-6 group w-full sm:w-auto">
+              <Button asChild size="lg" className="px-8 py-6 group w-full sm:w-auto">
                 <Link href="#upload">
                   Upload Your File
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 w-full sm:w-auto">
+              <Button asChild variant="outline" size="lg" className="px-8 py-6 w-full sm:w-auto">
                 <Link href="/dashboard">
                   <BarChart3 className="mr-2 h-5 w-5" />
                   View Dashboard

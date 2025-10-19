@@ -174,7 +174,7 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
                         <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                       </motion.div>
                       <div className="text-center sm:text-left min-w-0 flex-1">
-                        <p className="text-base sm:text-lg font-semibold text-green-600 dark:text-green-400 break-words px-2 sm:px-0">
+                        <p className="text-sm sm:text-base font-semibold text-green-600 dark:text-green-400 break-words px-2 sm:px-0">
                           {selectedFile.name}
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -243,11 +243,11 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
                         <Upload className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 text-primary" />
                       </motion.div>
                       <div className="text-center px-4">
-                        <p className="text-lg sm:text-xl md:text-2xl font-semibold mb-2">
+                        <p className="text-base sm:text-lg md:text-xl font-semibold mb-2">
                           Drop your Excel file here, or{' '}
                           <span className="text-primary hover:underline">browse</span>
                         </p>
-                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
+                        <p className="text-sm sm:text-base text-muted-foreground">
                           Supports .xlsx, .xls, and .csv files up to 10MB
                         </p>
                       </div>
@@ -290,7 +290,7 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
       >
         <div className="flex items-start space-x-2">
           <AlertCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-          <div className="text-sm sm:text-base md:text-lg text-primary min-w-0">
+          <div className="text-sm text-primary min-w-0">
             <p className="font-medium">Required columns:</p>
             <p className="mt-1 break-words">
               Department, File/Activity, Current Level, Pending Since (Days), 

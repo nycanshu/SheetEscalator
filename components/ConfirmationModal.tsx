@@ -40,7 +40,7 @@ export default function ConfirmationModal({
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
-            <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+            <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           </div>
           <DialogDescription className="text-sm text-muted-foreground pt-2">
             {description}
