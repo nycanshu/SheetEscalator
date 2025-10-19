@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Filter, 
   Search, 
@@ -19,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  RotateCcw
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllRecords, Record } from '@/lib/dexieClient';
@@ -92,6 +94,10 @@ export default function FilterPage() {
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [filtersLoaded, setFiltersLoaded] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [lastAiRequest, setLastAiRequest] = useState<number>(0);
+  const [aiRequestCount, setAiRequestCount] = useState<number>(0);
   const router = useRouter();
 
   const getDefaultValueForColumn = (columnKey: string) => {
@@ -132,6 +138,8 @@ export default function FilterPage() {
   const loadSavedFilters = () => {
     try {
       const savedFilters = localStorage.getItem('appliedFilters');
+      const savedAiCount = localStorage.getItem('aiRequestCount');
+      
       if (savedFilters) {
         const parsedFilters = JSON.parse(savedFilters);
         setFilterGroups(parsedFilters);
@@ -152,8 +160,14 @@ export default function FilterPage() {
         ]);
         setFiltersLoaded(false);
       }
+
+      // Load AI request count
+      if (savedAiCount) {
+        const count = parseInt(savedAiCount, 10);
+        setAiRequestCount(count);
+      }
     } catch (error) {
-      console.error('Error loading saved filters:', error);
+      console.error('Error loading saved data:', error);
       // Fallback to default filter if there's an error
       setFilterGroups([
         {
@@ -405,6 +419,69 @@ export default function FilterPage() {
     toast.success('Filters reset to default');
   };
 
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Please enter a description of what you want to filter');
+      return;
+    }
+
+    // Check daily limit
+    if (aiRequestCount >= 15) {
+      toast.error('Daily AI request limit reached. Please try again tomorrow.');
+      return;
+    }
+
+    // Rate limiting: 3 seconds between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastAiRequest;
+    const minInterval = 3000; // 3 seconds
+
+    if (timeSinceLastRequest < minInterval) {
+      const remainingTime = Math.ceil((minInterval - timeSinceLastRequest) / 1000);
+      toast.error(`Please wait ${remainingTime} more second(s) before making another request`);
+      return;
+    }
+
+    setIsGenerating(true);
+    setLastAiRequest(now);
+    
+    try {
+      const response = await fetch('/api/generate-filters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate filters');
+      }
+
+      const data = await response.json();
+      
+      // Validate the response has filters
+      if (!data.filters || !Array.isArray(data.filters)) {
+        throw new Error('Invalid response format from AI');
+      }
+
+      setFilterGroups(data.filters);
+      setFiltersLoaded(true);
+      const newCount = aiRequestCount + 1;
+      setAiRequestCount(newCount);
+      localStorage.setItem('aiRequestCount', newCount.toString());
+      toast.success('AI generated filters successfully!');
+    } catch (error) {
+      console.error('Error generating filters with AI:', error);
+      toast.error('Failed to generate filters with AI. Please use manual filters.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAiClear = () => {
+    setAiPrompt('');
+  };
+
   const getColumnType = (columnKey: string) => {
     const column = AVAILABLE_COLUMNS.find(col => col.key === columnKey);
     return column?.type || 'string';
@@ -563,6 +640,79 @@ export default function FilterPage() {
                 </Button>
               </div>
             </div>
+          </motion.div>
+
+          {/* AI Filter Generator Section */}
+          <motion.div variants={fadeInUp} className="mb-6">
+            <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-blue-500/5">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  AI Filter Generator
+                  <Badge variant="secondary" className="ml-2">Beta</Badge>
+                </CardTitle>
+            <CardDescription>
+              Describe what you want to filter and let AI generate the conditions for you
+              <br />
+              <span className="text-xs text-muted-foreground mt-1 block">
+                ⚡ Rate limit: 15 requests per minute, 1M tokens per day
+                <br />
+                📊 Your usage: {aiRequestCount} requests today
+                {aiRequestCount >= 15 && (
+                  <span className="ml-2 text-red-500 font-medium">
+                    (Daily limit reached - please try again tomorrow)
+                  </span>
+                )}
+              </span>
+            </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder="e.g., 'Show me all records where pending days are more than TAT days and department is Admin'"
+                    className="min-h-[80px]"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                <Button 
+                  onClick={handleAiGenerate}
+                  disabled={isGenerating || !aiPrompt.trim() || (Date.now() - lastAiRequest) < 3000 || aiRequestCount >= 15}
+                  className="flex-1"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (Date.now() - lastAiRequest) < 3000 ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Please Wait...
+                    </>
+                  ) : aiRequestCount >= 15 ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Daily Limit Reached
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Filters
+                    </>
+                  )}
+                </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleAiClear}
+                      disabled={isGenerating}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
