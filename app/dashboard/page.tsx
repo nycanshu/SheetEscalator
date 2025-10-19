@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFilteredData } from '@/hooks/useFilteredData';
 import PendingTable from '@/components/PendingTable';
 import EmailModal from '@/components/EmailModal';
@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail, Filter } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { clearAllData } from '@/lib/dexieClient';
+import { clearAllData, clearAppliedFilters } from '@/lib/dexieClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const fadeInUp = {
@@ -42,6 +42,27 @@ export default function Dashboard() {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
+  // Refresh data when page becomes visible (user navigates back from filter page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refresh();
+      }
+    };
+
+    const handleFocus = () => {
+      refresh();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refresh]);
+
   const handleSendEmail = (record: Record) => {
     setSelectedRecord(record);
     setIsEmailModalOpen(true);
@@ -61,8 +82,9 @@ export default function Dashboard() {
     setIsClearing(true);
     try {
       await clearAllData();
+      clearAppliedFilters(); // Also clear stored filters
       await refresh();
-      toast.success('All data cleared successfully');
+      toast.success('All data and filters cleared successfully');
       setIsClearModalOpen(false);
     } catch (error) {
       console.error('Error clearing data:', error);
@@ -70,6 +92,12 @@ export default function Dashboard() {
     } finally {
       setIsClearing(false);
     }
+  };
+
+  const handleClearFilters = () => {
+    clearAppliedFilters();
+    refresh();
+    toast.success('Filters cleared successfully');
   };
 
   const pendingCount = records.filter(r => !r.mailSent).length;
@@ -144,7 +172,7 @@ export default function Dashboard() {
               }
             </p>
             {appliedFilters && (
-              <div className="mt-2">
+              <div className="mt-2 flex gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -155,6 +183,14 @@ export default function Dashboard() {
                     <Filter className="h-3 w-3 mr-1" />
                     Modify Filters
                   </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClearFilters}
+                  className="text-xs"
+                >
+                  Clear Filters
                 </Button>
               </div>
             )}

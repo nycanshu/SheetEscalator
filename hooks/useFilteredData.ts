@@ -4,8 +4,9 @@ import { ParsedRow } from '@/lib/excel';
 
 export interface FilterCondition {
   column: string;
-  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal';
+  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal' | 'column_equals' | 'column_greater_than' | 'column_less_than' | 'column_greater_equal' | 'column_less_equal';
   value: string | number;
+  compareColumn?: string; // For column-to-column comparisons
 }
 
 export interface FilterGroup {
@@ -32,6 +33,7 @@ export function useFilteredData(): UseFilteredDataReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<FilterGroup[] | null>(null);
+  const [lastFilterTimestamp, setLastFilterTimestamp] = useState<string | null>(null);
 
   const applyFilters = useCallback((records: Record[], filters: FilterGroup[]): Record[] => {
     if (!filters || filters.length === 0) {
@@ -46,6 +48,29 @@ export function useFilteredData(): UseFilteredDataReturn {
           const recordValue = record[condition.column as keyof Record];
           const filterValue = condition.value;
 
+          // Handle column-to-column comparisons
+          if (condition.operator.startsWith('column_') && condition.compareColumn) {
+            const compareValue = record[condition.compareColumn as keyof Record];
+            let leftValue = Number(recordValue);
+            let rightValue = Number(compareValue);
+
+            switch (condition.operator) {
+              case 'column_equals':
+                return leftValue === rightValue;
+              case 'column_greater_than':
+                return leftValue > rightValue;
+              case 'column_less_than':
+                return leftValue < rightValue;
+              case 'column_greater_equal':
+                return leftValue >= rightValue;
+              case 'column_less_equal':
+                return leftValue <= rightValue;
+              default:
+                return true;
+            }
+          }
+
+          // Handle regular value comparisons
           switch (condition.operator) {
             case 'equals':
               if (typeof recordValue === 'boolean') {
@@ -89,6 +114,14 @@ export function useFilteredData(): UseFilteredDataReturn {
 
       // Check if there are applied filters in localStorage
       const storedFilters = localStorage.getItem('appliedFilters');
+      const filterTimestamp = localStorage.getItem('filterTimestamp');
+      
+      // Check if filters have been updated
+      const filtersChanged = filterTimestamp !== lastFilterTimestamp;
+      if (filtersChanged) {
+        setLastFilterTimestamp(filterTimestamp);
+      }
+      
       if (storedFilters) {
         try {
           const filters: FilterGroup[] = JSON.parse(storedFilters);
@@ -100,6 +133,7 @@ export function useFilteredData(): UseFilteredDataReturn {
           setFilteredRecords(recordsData);
         }
       } else {
+        setAppliedFilters(null);
         setFilteredRecords(recordsData);
       }
     } catch (err) {
@@ -116,6 +150,36 @@ export function useFilteredData(): UseFilteredDataReturn {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  // Listen for localStorage changes and custom events to refresh data when filters are updated
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'appliedFilters' || e.key === 'filterTimestamp') {
+        fetchData();
+      }
+    };
+
+    const handleFiltersUpdated = () => {
+      fetchData();
+    };
+
+    // Also listen for page visibility change to refresh when user comes back to dashboard
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('filtersUpdated', handleFiltersUpdated);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('filtersUpdated', handleFiltersUpdated);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchData]);
 
   return {

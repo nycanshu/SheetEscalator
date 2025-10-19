@@ -18,17 +18,18 @@ import {
   FileText, 
   CheckCircle,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllRecords } from '@/lib/dexieClient';
-import { ParsedRow } from '@/lib/excel';
+import { getAllRecords, Record } from '@/lib/dexieClient';
 import toast from 'react-hot-toast';
 
 interface FilterCondition {
   column: string;
-  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal';
+  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal' | 'column_equals' | 'column_greater_than' | 'column_less_than' | 'column_greater_equal' | 'column_less_equal';
   value: string | number;
+  compareColumn?: string; // For column-to-column comparisons
 }
 
 interface FilterGroup {
@@ -59,7 +60,12 @@ const OPERATORS = {
     { value: 'greater_than', label: 'Greater than' },
     { value: 'less_than', label: 'Less than' },
     { value: 'greater_equal', label: 'Greater than or equal' },
-    { value: 'less_equal', label: 'Less than or equal' }
+    { value: 'less_equal', label: 'Less than or equal' },
+    { value: 'column_equals', label: 'Equals Column' },
+    { value: 'column_greater_than', label: 'Greater than Column' },
+    { value: 'column_less_than', label: 'Less than Column' },
+    { value: 'column_greater_equal', label: 'Greater than or equal Column' },
+    { value: 'column_less_equal', label: 'Less than or equal Column' }
   ],
   boolean: [
     { value: 'equals', label: 'Equals' }
@@ -81,21 +87,89 @@ const staggerContainer = {
 };
 
 export default function FilterPage() {
-  const [allRecords, setAllRecords] = useState<ParsedRow[]>([]);
-  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([
-    {
-      id: '1',
-      conditions: [{ column: 'pendingSince', operator: 'greater_than', value: 0 }],
-      logic: 'AND'
-    }
-  ]);
+  const [allRecords, setAllRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(true);
   const [applyingFilters, setApplyingFilters] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [filtersLoaded, setFiltersLoaded] = useState(false);
   const router = useRouter();
+
+  const getDefaultValueForColumn = (columnKey: string) => {
+    const columnType = getColumnType(columnKey);
+    switch (columnType) {
+      case 'string':
+        return '';
+      case 'number':
+        return 0;
+      case 'boolean':
+        return 'false';
+      default:
+        return '';
+    }
+  };
+
+  const getDefaultOperatorForColumn = (columnKey: string) => {
+    const columnType = getColumnType(columnKey);
+    switch (columnType) {
+      case 'string':
+        return 'contains';
+      case 'number':
+        return 'greater_than';
+      case 'boolean':
+        return 'equals';
+      default:
+        return 'contains';
+    }
+  };
+
+  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
 
   useEffect(() => {
     loadRecords();
+    loadSavedFilters();
   }, []);
+
+  const loadSavedFilters = () => {
+    try {
+      const savedFilters = localStorage.getItem('appliedFilters');
+      if (savedFilters) {
+        const parsedFilters = JSON.parse(savedFilters);
+        setFilterGroups(parsedFilters);
+        setFiltersLoaded(true);
+      } else {
+        // Only use default filter if no saved filters exist
+        setFilterGroups([
+          {
+            id: '1',
+            conditions: [{ 
+              column: 'pendingSince', 
+              operator: 'column_greater_equal' as const, 
+              value: 0, 
+              compareColumn: 'tatDays' 
+            }],
+            logic: 'AND' as const
+          }
+        ]);
+        setFiltersLoaded(false);
+      }
+    } catch (error) {
+      console.error('Error loading saved filters:', error);
+      // Fallback to default filter if there's an error
+      setFilterGroups([
+        {
+          id: '1',
+          conditions: [{ 
+            column: 'pendingSince', 
+            operator: 'column_greater_equal' as const, 
+            value: 0, 
+            compareColumn: 'tatDays' 
+          }],
+          logic: 'AND' as const
+        }
+      ]);
+      setFiltersLoaded(false);
+    }
+  };
 
   const loadRecords = async () => {
     try {
@@ -118,9 +192,32 @@ export default function FilterPage() {
         if (group.conditions.length === 0) return true;
 
         const groupResults = group.conditions.map(condition => {
-          const recordValue = record[condition.column as keyof ParsedRow];
+          const recordValue = record[condition.column as keyof Record];
           const filterValue = condition.value;
 
+          // Handle column-to-column comparisons
+          if (condition.operator.startsWith('column_') && condition.compareColumn) {
+            const compareValue = record[condition.compareColumn as keyof Record];
+            let leftValue = Number(recordValue);
+            let rightValue = Number(compareValue);
+
+            switch (condition.operator) {
+              case 'column_equals':
+                return leftValue === rightValue;
+              case 'column_greater_than':
+                return leftValue > rightValue;
+              case 'column_less_than':
+                return leftValue < rightValue;
+              case 'column_greater_equal':
+                return leftValue >= rightValue;
+              case 'column_less_equal':
+                return leftValue <= rightValue;
+              default:
+                return true;
+            }
+          }
+
+          // Handle regular value comparisons
           switch (condition.operator) {
             case 'equals':
               if (typeof recordValue === 'boolean') {
@@ -149,6 +246,13 @@ export default function FilterPage() {
     });
   }, [allRecords, filterGroups]);
 
+  // Update localStorage with current filtered count when filters change
+  useEffect(() => {
+    if (allRecords.length > 0 && filterGroups.length > 0) {
+      localStorage.setItem('filteredRecordCount', filteredRecords.length.toString());
+    }
+  }, [filteredRecords.length, allRecords.length, filterGroups.length]);
+
   const addFilterGroup = () => {
     const newGroup: FilterGroup = {
       id: Date.now().toString(),
@@ -168,7 +272,15 @@ export default function FilterPage() {
     setFilterGroups(groups => 
       groups.map(group => 
         group.id === groupId 
-          ? { ...group, conditions: [...group.conditions, { column: 'department', operator: 'contains', value: '' }] }
+          ? { 
+              ...group, 
+              conditions: [...group.conditions, { 
+                column: 'department', 
+                operator: getDefaultOperatorForColumn('department'), 
+                value: getDefaultValueForColumn('department'),
+                compareColumn: undefined
+              }] 
+            }
           : group
       )
     );
@@ -190,11 +302,22 @@ export default function FilterPage() {
         group.id === groupId 
           ? { 
               ...group, 
-              conditions: group.conditions.map((condition, index) => 
-                index === conditionIndex 
-                  ? { ...condition, [field]: value }
-                  : condition
-              )
+              conditions: group.conditions.map((condition, index) => {
+                if (index === conditionIndex) {
+                  const updatedCondition = { ...condition, [field]: value };
+                  
+                  // If column changes, reset operator and value to appropriate defaults
+                  if (field === 'column') {
+                    updatedCondition.operator = getDefaultOperatorForColumn(value);
+                    updatedCondition.value = getDefaultValueForColumn(value);
+                    // Clear column-specific fields
+                    updatedCondition.compareColumn = undefined;
+                  }
+                  
+                  return updatedCondition;
+                }
+                return condition;
+              })
             }
           : group
       )
@@ -209,14 +332,23 @@ export default function FilterPage() {
     );
   };
 
+  const applyFiltersToStorage = () => {
+    // Store filtered records in a way that dashboard can access them
+    localStorage.setItem('appliedFilters', JSON.stringify(filterGroups));
+    localStorage.setItem('filteredRecordCount', filteredRecords.length.toString());
+    localStorage.setItem('filterTimestamp', Date.now().toString());
+    
+    // Mark filters as loaded/saved
+    setFiltersLoaded(true);
+    
+    // Dispatch custom event to notify dashboard of filter changes
+    window.dispatchEvent(new CustomEvent('filtersUpdated'));
+  };
+
   const handleApplyFilters = async () => {
     setApplyingFilters(true);
     try {
-      // Store filtered records in a way that dashboard can access them
-      // For now, we'll use localStorage to pass the filter criteria
-      localStorage.setItem('appliedFilters', JSON.stringify(filterGroups));
-      localStorage.setItem('filteredRecordCount', filteredRecords.length.toString());
-      
+      applyFiltersToStorage();
       toast.success(`Applied filters! Found ${filteredRecords.length} matching records.`);
     } catch (error) {
       console.error('Error applying filters:', error);
@@ -226,13 +358,75 @@ export default function FilterPage() {
     }
   };
 
-  const handleContinue = () => {
-    router.push('/dashboard');
+  const handleContinue = async () => {
+    setApplyingFilters(true);
+    try {
+      // Apply filters first, then navigate
+      applyFiltersToStorage();
+      toast.success(`Applied filters! Found ${filteredRecords.length} matching records.`);
+      
+      // Small delay to ensure localStorage is updated before navigation
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 100);
+    } catch (error) {
+      console.error('Error applying filters:', error);
+      toast.error('Failed to apply filters');
+      setApplyingFilters(false);
+    }
+  };
+
+  const handleResetFilters = () => {
+    const defaultFilter: FilterGroup[] = [
+      {
+        id: '1',
+        conditions: [{ 
+          column: 'pendingSince', 
+          operator: 'column_greater_equal' as const, 
+          value: 0, 
+          compareColumn: 'tatDays' 
+        }],
+        logic: 'AND' as const
+      }
+    ];
+    
+    setFilterGroups(defaultFilter);
+    setFiltersLoaded(false);
+    
+    // Also update localStorage with the default filter
+    localStorage.setItem('appliedFilters', JSON.stringify(defaultFilter));
+    localStorage.setItem('filteredRecordCount', '0'); // Will be updated by the filteredRecords calculation
+    localStorage.setItem('filterTimestamp', Date.now().toString());
+    
+    // Dispatch event to notify dashboard
+    window.dispatchEvent(new CustomEvent('filtersUpdated'));
+    
+    setShowResetModal(false);
+    toast.success('Filters reset to default');
   };
 
   const getColumnType = (columnKey: string) => {
     const column = AVAILABLE_COLUMNS.find(col => col.key === columnKey);
     return column?.type || 'string';
+  };
+
+  const getColumnLabel = (columnKey: string) => {
+    const column = AVAILABLE_COLUMNS.find(col => col.key === columnKey);
+    return column?.label || columnKey;
+  };
+
+  const formatFilterCondition = (condition: FilterCondition) => {
+    const columnLabel = getColumnLabel(condition.column);
+    
+    if (condition.operator.startsWith('column_')) {
+      const compareLabel = getColumnLabel(condition.compareColumn || '');
+      const operatorLabel = condition.operator.replace('column_', '').replace('_', ' ');
+      
+      return `${columnLabel} ${operatorLabel} ${compareLabel}`;
+    } else {
+      const operatorLabel = condition.operator.replace('_', ' ');
+      return `${columnLabel} ${operatorLabel} ${condition.value}`;
+    }
   };
 
   if (loading) {
@@ -296,7 +490,7 @@ export default function FilterPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 <span>Total Records: {allRecords.length}</span>
@@ -304,6 +498,69 @@ export default function FilterPage() {
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
                 <span>Filtered Records: {filteredRecords.length}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8 justify-between items-center">
+              {/* Back button on left */}
+              <Button
+                variant="outline"
+                onClick={() => router.push('/')}
+                className="w-full sm:w-auto"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+
+              {/* Apply filters and Continue buttons on right */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {/* Reset button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowResetModal(true)}
+                  className="w-full sm:w-auto"
+                  title="Reset filters to default"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  onClick={handleApplyFilters}
+                  disabled={applyingFilters}
+                  className="w-full sm:w-auto"
+                >
+                  {applyingFilters ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      <Filter className="mr-2 h-4 w-4" />
+                      Apply Filters
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleContinue}
+                  disabled={filteredRecords.length === 0 || applyingFilters}
+                  className="w-full sm:w-auto"
+                >
+                  {applyingFilters ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Continue to Dashboard
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -319,6 +576,11 @@ export default function FilterPage() {
                   </CardTitle>
                   <CardDescription>
                     Define conditions to filter your data. You can create multiple filter groups.
+                    {filtersLoaded && (
+                      <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                        (Loaded from previous session)
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -361,72 +623,110 @@ export default function FilterPage() {
 
                         <div className="space-y-3">
                           {group.conditions.map((condition, conditionIndex) => (
-                            <div key={conditionIndex} className="flex items-center gap-2 flex-wrap">
-                              <Select
-                                value={condition.column}
-                                onValueChange={(value) => updateCondition(group.id, conditionIndex, 'column', value)}
-                              >
-                                <SelectTrigger className="w-48">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {AVAILABLE_COLUMNS.map(column => (
-                                    <SelectItem key={column.key} value={column.key}>
-                                      {column.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-
-                              <Select
-                                value={condition.operator}
-                                onValueChange={(value) => updateCondition(group.id, conditionIndex, 'operator', value)}
-                              >
-                                <SelectTrigger className="w-40">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {OPERATORS[getColumnType(condition.column) as keyof typeof OPERATORS].map(op => (
-                                    <SelectItem key={op.value} value={op.value}>
-                                      {op.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-
-                              {getColumnType(condition.column) === 'boolean' ? (
+                            <div key={conditionIndex} className="space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Select
-                                  value={String(condition.value)}
-                                  onValueChange={(value) => updateCondition(group.id, conditionIndex, 'value', value === 'true')}
+                                  value={condition.column}
+                                  onValueChange={(value) => updateCondition(group.id, conditionIndex, 'column', value)}
                                 >
-                                  <SelectTrigger className="w-32">
+                                  <SelectTrigger className="w-48">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="true">True</SelectItem>
-                                    <SelectItem value="false">False</SelectItem>
+                                    {AVAILABLE_COLUMNS.map(column => (
+                                      <SelectItem key={column.key} value={column.key}>
+                                        {column.label}
+                                      </SelectItem>
+                                    ))}
                                   </SelectContent>
                                 </Select>
-                              ) : (
-                                <Input
-                                  type={getColumnType(condition.column) === 'number' ? 'number' : 'text'}
-                                  value={condition.value}
-                                  onChange={(e) => updateCondition(group.id, conditionIndex, 'value', 
-                                    getColumnType(condition.column) === 'number' ? Number(e.target.value) : e.target.value
-                                  )}
-                                  placeholder="Enter value..."
-                                  className="w-48"
-                                />
+
+                                <Select
+                                  value={condition.operator}
+                                  onValueChange={(value) => updateCondition(group.id, conditionIndex, 'operator', value)}
+                                >
+                                  <SelectTrigger className="w-48">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {OPERATORS[getColumnType(condition.column) as keyof typeof OPERATORS].map(op => (
+                                      <SelectItem key={op.value} value={op.value}>
+                                        {op.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+
+                                {group.conditions.length > 1 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removeCondition(group.id, conditionIndex)}
+                                  >
+                                    Remove
+                                  </Button>
+                                )}
+                              </div>
+
+                              {/* Column comparison UI */}
+                              {condition.operator.startsWith('column_') && getColumnType(condition.column) === 'number' && (
+                                <div className="flex items-center gap-2 flex-wrap ml-4 pl-4 border-l-2 border-muted">
+                                  <Label className="text-sm text-muted-foreground">Compare with:</Label>
+                                  <Select
+                                    value={condition.compareColumn || ''}
+                                    onValueChange={(value) => updateCondition(group.id, conditionIndex, 'compareColumn', value)}
+                                  >
+                                    <SelectTrigger className="w-48">
+                                      <SelectValue placeholder="Select column" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {AVAILABLE_COLUMNS
+                                        .filter(col => col.type === 'number' && col.key !== condition.column)
+                                        .map(column => (
+                                          <SelectItem key={column.key} value={column.key}>
+                                            {column.label}
+                                          </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                  </Select>
+
+                                </div>
                               )}
 
-                              {group.conditions.length > 1 && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => removeCondition(group.id, conditionIndex)}
-                                >
-                                  Remove
-                                </Button>
+                              {/* Regular value input */}
+                              {!condition.operator.startsWith('column_') && (
+                                <div className="flex items-center gap-2 flex-wrap ml-4 pl-4 border-l-2 border-muted">
+                                  <Label className="text-sm text-muted-foreground">Value:</Label>
+                                  {getColumnType(condition.column) === 'boolean' ? (
+                                    <Select
+                                      value={String(condition.value)}
+                                      onValueChange={(value) => updateCondition(group.id, conditionIndex, 'value', value === 'true')}
+                                    >
+                                      <SelectTrigger className="w-32">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="true">True</SelectItem>
+                                        <SelectItem value="false">False</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <Input
+                                      type={getColumnType(condition.column) === 'number' ? 'number' : 'text'}
+                                      value={condition.value}
+                                      onChange={(e) => updateCondition(group.id, conditionIndex, 'value', 
+                                        getColumnType(condition.column) === 'number' ? Number(e.target.value) : e.target.value
+                                      )}
+                                      placeholder={
+                                        getColumnType(condition.column) === 'string' ? 'Enter text...' :
+                                        getColumnType(condition.column) === 'number' ? 'Enter number...' :
+                                        'Enter value...'
+                                      }
+                                      className="w-48"
+                                      step={getColumnType(condition.column) === 'number' ? '0.1' : undefined}
+                                    />
+                                  )}
+                                </div>
                               )}
                             </div>
                           ))}
@@ -497,56 +797,78 @@ export default function FilterPage() {
                         </span>
                       </div>
                     </div>
+                    
+                    {/* Filter Summary */}
+                    {filterGroups.some(group => group.conditions.length > 0) && (
+                      <>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Applied Filters:</Label>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {filterGroups.map((group, groupIndex) => (
+                              <div key={group.id} className="text-xs">
+                                <div className="font-medium text-muted-foreground mb-1">
+                                  Group {groupIndex + 1} ({group.logic})
+                                </div>
+                                {group.conditions.map((condition, conditionIndex) => (
+                                  <div key={conditionIndex} className="ml-2 p-2 bg-muted/50 rounded text-xs">
+                                    {formatFilterCondition(condition)}
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Actions */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleApplyFilters}
-                      disabled={applyingFilters}
-                      className="w-full"
-                    >
-                      {applyingFilters ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          Applying...
-                        </>
-                      ) : (
-                        <>
-                          <Filter className="mr-2 h-4 w-4" />
-                          Apply Filters
-                        </>
-                      )}
-                    </Button>
-                    
-                    <Button
-                      onClick={handleContinue}
-                      disabled={filteredRecords.length === 0}
-                      className="w-full"
-                    >
-                      <ArrowRight className="mr-2 h-4 w-4" />
-                      Continue to Dashboard
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push('/')}
-                      className="w-full"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to Upload
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </motion.div>
           </div>
         </motion.div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-background border rounded-lg p-6 max-w-md w-full mx-4"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/20">
+                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="text-lg font-semibold">Reset Filters</h3>
+            </div>
+            
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to reset all filters to the default configuration? 
+              This will remove all your current filter conditions and restore the default 
+              &quot;Pending Since &gt;= TAT Days&quot; filter.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowResetModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleResetFilters}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

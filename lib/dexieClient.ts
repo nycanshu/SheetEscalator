@@ -7,8 +7,8 @@ export interface Upload {
   uploadedAt: Date;
 }
 
-// Pending records only - stores only records that need escalation (Pending Since > TAT Days)
-// This is efficient as we only store actionable records, not all parsed data
+// All records - stores all parsed records for dynamic filtering
+// Users can now apply custom filters instead of just pending records
 export interface Record {
   id?: number;
   uploadId: number;
@@ -83,4 +83,11 @@ export const getDepartments = async (): Promise<string[]> => {
   const records = await db.records.toArray();
   const departments = [...new Set(records.map(r => r.department))];
   return departments.sort();
+};
+
+// Clear applied filters
+export const clearAppliedFilters = (): void => {
+  localStorage.removeItem('appliedFilters');
+  localStorage.removeItem('filteredRecordCount');
+  localStorage.removeItem('filterTimestamp');
 };
