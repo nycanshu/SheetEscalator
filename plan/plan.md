@@ -1,6 +1,6 @@
-# Sheet-Automate — Software Requirements Specification (SRS)
+# SheetEscalator — Software Requirements Specification (SRS)
 
-> **Project:** Sheet-Automate — Next.js app for extracting "pending" rows from uploaded Excel files and sending escalation emails.
+> **Project:** SheetEscalator — Next.js app for extracting "pending" rows from uploaded Excel files and sending escalation emails.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ## 1.1 Purpose
 
-This SRS describes the functional and non-functional requirements, architecture, API design, data model, folder structure, and development practices for *Sheet-Automate*. The goal is a lightweight serverless web app (Next.js) that parses uploaded Excel files, filters pending entries, persists them in the browser (IndexedDB), and supports sending escalation emails via a serverless email endpoint.
+This SRS describes the functional and non-functional requirements, architecture, API design, data model, folder structure, and development practices for *SheetEscalator*. The goal is a lightweight serverless web app (Next.js) that parses uploaded Excel files, filters pending entries, persists them in the browser (IndexedDB), and supports sending escalation emails via a serverless email endpoint.
 
 ## 1.2 Scope
 
@@ -275,4 +275,4 @@ RATE_LIMIT_PER_MIN=30
 
 # End of Document
 
-*Prepared for: Sheet-Automate — lightweight serverless Next.js app (IndexedDB persistence, serverless email sending)*
+*Prepared for: SheetEscalator — lightweight serverless Next.js app (IndexedDB persistence, serverless email sending)*

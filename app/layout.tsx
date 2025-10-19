@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sheet-Automate",
+  title: "SheetEscalator",
   description: "Upload Excel files, identify pending records, and send escalation emails automatically",
 };
 

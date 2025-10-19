@@ -57,7 +57,7 @@ export default function Home() {
             className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-transparent"
             variants={fadeInUp}
           >
-            Sheet-Automate
+            SheetEscalator
           </motion.h1>
 
           <motion.p 
@@ -222,7 +222,7 @@ export default function Home() {
           variants={staggerContainer}
         >
           <motion.div className="text-center mb-16" variants={fadeInUp}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Sheet-Automate?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose SheetEscalator?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Built for efficiency, designed for simplicity
             </p>

@@ -47,7 +47,7 @@ export default function Navbar() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">Sheet-Automate</span>
+            <span className="text-xl font-bold">SheetEscalator</span>
           </div>
 
           {/* Desktop Navigation */}
