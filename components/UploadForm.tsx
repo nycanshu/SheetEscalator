@@ -95,16 +95,16 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
         
         // Save to IndexedDB - saveUpload now handles clearing uploads automatically
         const uploadId = await saveUpload(result.filename);
-        const records = convertToRecords(result.pending, uploadId);
+        const records = convertToRecords(result.allRows || result.pending, uploadId);
         await saveRecords(records);
 
-        toast.success(`Successfully processed ${result.pendingCount} pending records!`);
+        toast.success(`Successfully processed ${result.totalRows} records! Configure filters to view your data.`);
         
         if (onUploadSuccess) {
           onUploadSuccess();
         }
         
-        router.push('/dashboard');
+        router.push('/sheet/filters');
       } else {
         throw new Error(result.error || 'Failed to parse Excel file');
       }

@@ -139,7 +139,7 @@ export default function PendingTable({ data, departments, onSendEmail, loading }
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pending Records ({filteredAndSortedData.length} of {data.length})</CardTitle>
+        <CardTitle>Records ({filteredAndSortedData.length} of {data.length})</CardTitle>
         
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mt-4">

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { 
   Home, 
   BarChart3, 
+  Filter,
   Sun, 
   Moon, 
   Menu,
@@ -34,6 +35,7 @@ export default function Navbar() {
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
+    { href: '/sheet/filters', label: 'Filters', icon: Filter },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   ];
 

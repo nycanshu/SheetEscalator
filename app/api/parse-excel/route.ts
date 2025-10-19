@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseBufferToRows, filterPending } from '@/lib/excel';
+import { parseBufferToRows, filterPending, getAllParsedRows } from '@/lib/excel';
 import { v4 as uuidv4 } from 'uuid';
 
 const MAX_FILE_SIZE = parseInt(process.env.MAX_UPLOAD_SIZE_MB || '10') * 1024 * 1024; // Convert MB to bytes
@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
     // Parse the Excel file
     const parsedRows = parseBufferToRows(buffer);
     
-    // Filter pending rows (where Pending Since > TAT Days)
+    // Get all rows (no filtering at this stage)
+    const allRows = getAllParsedRows(parsedRows);
+    
+    // Also calculate pending rows for reference
     const pendingRows = filterPending(parsedRows);
 
     // Generate upload ID
@@ -55,7 +58,8 @@ export async function POST(request: NextRequest) {
       uploadId,
       pendingCount: pendingRows.length,
       totalRows: parsedRows.length,
-      pending: pendingRows,
+      allRows: allRows, // All rows for filtering
+      pending: pendingRows, // Keep for backward compatibility
       filename: file.name
     });
 

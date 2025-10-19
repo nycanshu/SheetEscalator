@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePendingData } from '@/hooks/usePendingData';
+import { useFilteredData } from '@/hooks/useFilteredData';
 import PendingTable from '@/components/PendingTable';
 import EmailModal from '@/components/EmailModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -9,7 +9,7 @@ import { Record } from '@/lib/dexieClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail } from 'lucide-react';
+import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail, Filter } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { clearAllData } from '@/lib/dexieClient';
@@ -36,7 +36,7 @@ const scaleIn = {
 };
 
 export default function Dashboard() {
-  const { records, departments, loading, error, refresh } = usePendingData();
+  const { records, departments, loading, error, refresh, appliedFilters, totalRecords, filteredCount } = useFilteredData();
   const [selectedRecord, setSelectedRecord] = useState<Record | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -138,8 +138,26 @@ export default function Dashboard() {
           <motion.div variants={fadeInUp}>
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">
-              Manage pending records and send escalation emails
+              {appliedFilters ? 
+                `Viewing ${filteredCount} of ${totalRecords} records (filtered)` : 
+                'Manage records and send escalation emails'
+              }
             </p>
+            {appliedFilters && (
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="text-xs"
+                >
+                  <Link href="/sheet/filters">
+                    <Filter className="h-3 w-3 mr-1" />
+                    Modify Filters
+                  </Link>
+                </Button>
+              </div>
+            )}
           </motion.div>
           <motion.div 
             className="flex flex-wrap gap-2 mt-4 sm:mt-0"
@@ -196,7 +214,7 @@ export default function Dashboard() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-primary" />
-                  Total Records
+                  {appliedFilters ? 'Filtered Records' : 'Total Records'}
                 </CardTitle>
                 <Badge variant="outline">{records.length}</Badge>
               </CardHeader>
@@ -210,7 +228,10 @@ export default function Dashboard() {
                   {records.length}
                 </motion.div>
                 <p className="text-xs text-muted-foreground">
-                  All pending records from uploaded files
+                  {appliedFilters ? 
+                    `Showing ${filteredCount} of ${totalRecords} records` : 
+                    'All records from uploaded files'
+                  }
                 </p>
               </CardContent>
             </Card>

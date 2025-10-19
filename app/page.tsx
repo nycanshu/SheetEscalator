@@ -3,7 +3,7 @@
 import UploadForm from '@/components/UploadForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, BarChart3, Mail, ArrowRight, Sparkles, Zap, Shield, Clock, CheckCircle } from 'lucide-react';
+import { FileText, BarChart3, Mail, ArrowRight, Sparkles, Zap, Shield, Clock, CheckCircle, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -78,9 +78,9 @@ export default function Home() {
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="px-8 py-6 w-full sm:w-auto">
-              <Link href="/dashboard">
-                <BarChart3 className="mr-2 h-5 w-5" />
-                View Dashboard
+              <Link href="/sheet/filters">
+                <Filter className="mr-2 h-5 w-5" />
+                Configure Filters
               </Link>
             </Button>
           </motion.div>
@@ -277,9 +277,9 @@ export default function Home() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="px-8 py-6 w-full sm:w-auto">
-                <Link href="/dashboard">
-                  <BarChart3 className="mr-2 h-5 w-5" />
-                  View Dashboard
+                <Link href="/sheet/filters">
+                  <Filter className="mr-2 h-5 w-5" />
+                  Configure Filters
                 </Link>
               </Button>
             </div>

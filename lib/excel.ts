@@ -115,6 +115,10 @@ export function filterPending(rows: ParsedRow[]): ParsedRow[] {
   return rows.filter(row => row.pendingSince > row.tatDays);
 }
 
+export function getAllParsedRows(rows: ParsedRow[]): ParsedRow[] {
+  return rows; // Return all rows without filtering
+}
+
 function parseNumber(value: any, context: string): number {
   if (value === undefined || value === null || value === '') {
     throw new Error(`${context}: Value is required`);
