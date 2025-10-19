@@ -113,7 +113,7 @@ export default function PendingTable({ data, departments, onSendEmail, loading }
     return (
       <Card>
         <CardContent className="p-8">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             No pending records found. Upload an Excel file to get started.
           </div>
         </CardContent>
@@ -130,7 +130,7 @@ export default function PendingTable({ data, departments, onSendEmail, loading }
         <div className="flex flex-col sm:flex-row gap-4 mt-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search records..."
                 value={searchTerm}
