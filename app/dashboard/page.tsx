@@ -9,10 +9,31 @@ import { Record } from '@/lib/dexieClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, RefreshCw, AlertCircle, Home, Trash2 } from 'lucide-react';
+import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail, Users } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { clearRecords } from '@/lib/dexieClient';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 60 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.8 },
+  animate: { opacity: 1, scale: 1 },
+  transition: { duration: 0.5 }
+};
 
 export default function Dashboard() {
   const { records, departments, loading, error, refresh } = usePendingData();
@@ -57,17 +78,49 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Error Loading Data</h2>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="max-w-md">
+            <CardContent className="p-8 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              >
+                <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              </motion.div>
+              <motion.h2 
+                className="text-xl font-semibold mb-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                Error Loading Data
+              </motion.h2>
+              <motion.p 
+                className="text-muted-foreground mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {error}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Button onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -76,92 +129,157 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <div>
+        <motion.div 
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8"
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer}
+        >
+          <motion.div variants={fadeInUp}>
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">
               Manage pending records and send escalation emails
             </p>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
-            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          </motion.div>
+          <motion.div 
+            className="flex flex-wrap gap-2 mt-4 sm:mt-0"
+            variants={fadeInUp}
+          >
+            <Button variant="outline" onClick={handleRefresh} disabled={loading} className="group">
+              <RefreshCw className={`h-4 w-4 mr-2 group-hover:rotate-180 transition-transform ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="group">
               <Link href="/">
-                <Home className="h-4 w-4 mr-2" />
+                <Home className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                 Home
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="group">
               <Link href="/">
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                 Upload New File
               </Link>
             </Button>
-            {records.length > 0 && (
-              <Button 
-                variant="destructive" 
-                onClick={() => setIsClearModalOpen(true)}
-                disabled={loading}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear Data
-              </Button>
-            )}
-          </div>
-        </div>
+            <AnimatePresence>
+              {records.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setIsClearModalOpen(true)}
+                    disabled={loading}
+                    className="group"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                    Clear Data
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-              <Badge variant="outline">{records.length}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{records.length}</div>
-              <p className="text-xs text-muted-foreground">
-                All pending records from uploaded files
-              </p>
-            </CardContent>
-          </Card>
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer}
+        >
+          <motion.div variants={scaleIn}>
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  Total Records
+                </CardTitle>
+                <Badge variant="outline">{records.length}</Badge>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  className="text-2xl font-bold"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  {records.length}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">
+                  All pending records from uploaded files
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <Badge variant="destructive">{pendingCount}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{pendingCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Records awaiting escalation
-              </p>
-            </CardContent>
-          </Card>
+          <motion.div variants={scaleIn}>
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  Pending
+                </CardTitle>
+                <Badge variant="destructive">{pendingCount}</Badge>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  className="text-2xl font-bold text-destructive"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                >
+                  {pendingCount}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">
+                  Records awaiting escalation
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
-              <Badge variant="default">{sentCount}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{sentCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Escalation emails sent
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+          <motion.div variants={scaleIn}>
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  Emails Sent
+                </CardTitle>
+                <Badge variant="default">{sentCount}</Badge>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  className="text-2xl font-bold text-green-600 dark:text-green-400"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                >
+                  {sentCount}
+                </motion.div>
+                <p className="text-xs text-muted-foreground">
+                  Escalation emails sent
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
 
         {/* Main Table */}
-        <PendingTable
-          data={records}
-          departments={departments}
-          onSendEmail={handleSendEmail}
-          loading={loading}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <PendingTable
+            data={records}
+            departments={departments}
+            onSendEmail={handleSendEmail}
+            loading={loading}
+          />
+        </motion.div>
 
         {/* Email Modal */}
         <EmailModal

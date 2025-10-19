@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,14 @@ import { useTheme } from 'next-themes';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+
+  // Prevent hydration mismatch by only rendering theme-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -73,11 +79,18 @@ export default function Navbar() {
               onClick={toggleTheme}
               className="h-9 w-9"
             >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
+              <div className="relative">
+                <Sun 
+                  className={`h-4 w-4 transition-opacity duration-200 ${
+                    mounted && theme === 'dark' ? 'opacity-100' : 'opacity-0 absolute'
+                  }`} 
+                />
+                <Moon 
+                  className={`h-4 w-4 transition-opacity duration-200 ${
+                    mounted && theme === 'dark' ? 'opacity-0 absolute' : 'opacity-100'
+                  }`} 
+                />
+              </div>
               <span className="sr-only">Toggle theme</span>
             </Button>
 

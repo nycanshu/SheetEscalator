@@ -45,12 +45,21 @@ export default function RootLayout({
           </div>
           <Toaster 
             position="top-right"
+            containerStyle={{
+              top: '80px', // 64px navbar height + 16px margin
+              right: '16px',
+              left: 'auto',
+              maxWidth: 'calc(100vw - 32px)',
+            }}
             toastOptions={{
               duration: 4000,
               style: {
                 background: 'hsl(var(--background))',
                 color: 'hsl(var(--foreground))',
                 border: '1px solid hsl(var(--border))',
+                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                maxWidth: '400px',
+                minWidth: '300px',
               },
               success: {
                 duration: 3000,
