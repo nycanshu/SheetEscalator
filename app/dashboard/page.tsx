@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, RefreshCw, AlertCircle, Home, Trash2, BarChart3, Mail, Users } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { clearRecords } from '@/lib/dexieClient';
+import { clearAllData } from '@/lib/dexieClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const fadeInUp = {
@@ -60,7 +60,7 @@ export default function Dashboard() {
   const handleClearData = async () => {
     setIsClearing(true);
     try {
-      await clearRecords();
+      await clearAllData();
       await refresh();
       toast.success('All data cleared successfully');
       setIsClearModalOpen(false);
@@ -156,7 +156,7 @@ export default function Dashboard() {
               </Link>
             </Button>
             <Button variant="outline" asChild className="group">
-              <Link href="/">
+              <Link href="/#upload">
                 <Upload className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
                 Upload New File
               </Link>

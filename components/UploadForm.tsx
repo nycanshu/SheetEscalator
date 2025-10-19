@@ -90,10 +90,10 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
       const result = await response.json();
 
       if (response.ok && result.pending) {
-        // Clear existing data before saving new data
+        // Clear existing records before saving new data
         await clearRecords();
         
-        // Save to IndexedDB
+        // Save to IndexedDB - saveUpload now handles clearing uploads automatically
         const uploadId = await saveUpload(result.filename);
         const records = convertToRecords(result.pending, uploadId);
         await saveRecords(records);
@@ -121,14 +121,14 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
   };
 
   return (
-    <div id="upload" className="w-full max-w-2xl mx-auto">
+    <div id="upload" className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-all duration-300 hover:shadow-lg">
-          <CardContent className="p-8">
+          <CardContent className="p-6 sm:p-8 md:p-10 lg:p-12">
             <motion.div
               className={`text-center transition-all duration-300 cursor-pointer rounded-lg ${
                 isDragging ? 'bg-primary/5 scale-[1.02]' : ''
@@ -240,14 +240,14 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
                           ease: "easeInOut"
                         }}
                       >
-                        <Upload className="h-12 w-12 text-primary" />
+                        <Upload className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 text-primary" />
                       </motion.div>
                       <div className="text-center px-4">
-                        <p className="text-lg sm:text-xl font-semibold mb-2">
+                        <p className="text-lg sm:text-xl md:text-2xl font-semibold mb-2">
                           Drop your Excel file here, or{' '}
                           <span className="text-primary hover:underline">browse</span>
                         </p>
-                        <p className="text-sm sm:text-base text-muted-foreground">
+                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                           Supports .xlsx, .xls, and .csv files up to 10MB
                         </p>
                       </div>
@@ -283,14 +283,14 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
       </motion.div>
 
       <motion.div 
-        className="mt-6 p-4 bg-primary/10 rounded-lg"
+        className="mt-6 p-4 sm:p-6 md:p-8 bg-primary/10 rounded-lg"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
         <div className="flex items-start space-x-2">
           <AlertCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-primary min-w-0">
+          <div className="text-sm sm:text-base md:text-lg text-primary min-w-0">
             <p className="font-medium">Required columns:</p>
             <p className="mt-1 break-words">
               Department, File/Activity, Current Level, Pending Since (Days), 

@@ -1,11 +1,14 @@
 import Dexie, { Table } from 'dexie';
 
+// Upload metadata - stores only the latest upload info
 export interface Upload {
   id?: number;
   filename: string;
   uploadedAt: Date;
 }
 
+// Pending records only - stores only records that need escalation (Pending Since > TAT Days)
+// This is efficient as we only store actionable records, not all parsed data
 export interface Record {
   id?: number;
   uploadId: number;
@@ -38,6 +41,10 @@ export const db = new PendingFilesDB();
 
 // Helper methods
 export const saveUpload = async (filename: string): Promise<number> => {
+  // Clear existing uploads first to ensure only ONE upload entry exists at any time
+  // This prevents storage accumulation and maintains efficient storage
+  await db.uploads.clear();
+  
   const uploadId = await db.uploads.add({
     filename,
     uploadedAt: new Date()
@@ -59,6 +66,13 @@ export const updateMailSent = async (recordId: number, mailSent: boolean): Promi
 
 export const clearRecords = async (): Promise<void> => {
   await db.records.clear();
+};
+
+// Clear all data - used for proper override when uploading new files
+// This ensures we don't accumulate data and maintain efficient storage
+export const clearAllData = async (): Promise<void> => {
+  await db.records.clear();
+  await db.uploads.clear();
 };
 
 export const getRecordsByUploadId = async (uploadId: number): Promise<Record[]> => {
